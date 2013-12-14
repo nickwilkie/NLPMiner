@@ -1,10 +1,16 @@
 package org.uvm.wilkie.nlpminer;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +37,48 @@ public class CUICollector {
 	
 	public Collection<CUIItemset> getCuiItemsets() {
 		return itemsets.values();
+	}
+	
+	public void saveSpmfTransactionFile(File outputFile) throws IOException {
+		BufferedWriter writer = null;
+		try {
+			// we create an object for writing the output file
+			writer = new BufferedWriter(new FileWriter(outputFile)); 
+			// we read the file line by line until the end of the file
+			List<CUIItemset> cuiItemsets = new ArrayList<CUIItemset>(itemsets.values());
+			for (int i = 0; i < cuiItemsets.size(); i++) {
+				if (i != 0) {
+					writer.newLine(); // create new line
+				}
+				
+				CUIItemset itemset = cuiItemsets.get(i);
+				
+				// we use a set to store the values to avoid duplicates
+				// because they are not allowed in a transaction
+				Set<Integer> values = new HashSet<Integer>();
+				for(Integer intToAdd : itemset.getCuiNumbers()){
+					values.add(intToAdd);
+				}
+				
+				// sort the transaction in lexical order
+				List<Integer> listValues = new ArrayList<Integer>(values);
+				Collections.sort(listValues);
+				
+				// for each item, we will output them
+				for (int j=0; j<listValues.size(); j++) {
+					if (j != 0) {
+						writer.write(' ');
+					}
+					writer.write(listValues.get(j));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (writer != null) {
+				writer.close();
+			}
+		}
 	}
 	
 	class CUIItemset {

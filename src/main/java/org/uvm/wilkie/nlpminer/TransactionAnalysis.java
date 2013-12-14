@@ -2,6 +2,7 @@ package org.uvm.wilkie.nlpminer;
 
 import java.io.IOException;
 
+import ca.pfv.spmf.algorithms.frequentpatterns.apriori.AlgoApriori;
 import ca.pfv.spmf.algorithms.frequentpatterns.eclat_and_charm.AlgoCharm;
 import ca.pfv.spmf.input.transaction_database_list_integers.TransactionDatabase;
 import ca.pfv.spmf.patterns.itemset_set_integers_with_tids.Itemsets;
@@ -39,6 +40,20 @@ public class TransactionAnalysis {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		return null;
+	}
+	
+	public Itemsets runApriori() {
+		System.out.println("Running Apriori algorithm on transaction database.");
+		AlgoApriori apriori = new AlgoApriori();
+		
+//		try {
+//			Itemsets result = apriori.(null, transactionDb, false, 500, 3);
+//			
+//			return result;
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		return null;
 	}
 }

@@ -12,8 +12,8 @@ import java.util.List;
 public class PMIDList {
 	List<Integer> pmids = new ArrayList<Integer>();
 	
-	public PMIDList() throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(new File("/Users/Nick/Downloads/pubmed_result.txt")));
+	public PMIDList(File fileToLoad) throws IOException {
+		BufferedReader reader = new BufferedReader(new FileReader(fileToLoad));
 		String line;
 		while((line = reader.readLine()) != null && !line.trim().isEmpty()) {
 			try {
