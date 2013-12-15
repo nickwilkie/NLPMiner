@@ -31,11 +31,13 @@ public class TransactionAnalysis {
 	
 	public Itemsets runCharm() {
 		System.out.println("Running CHARM algorithm on transaction database.");
+		long start = System.currentTimeMillis();
 		AlgoCharm charm = new AlgoCharm();
 		
 		try {
 			Itemsets result = charm.runAlgorithmWithRelativeMinsup(null, transactionDb, false, 500, 3);
-			
+
+			System.out.println("Time to run CHARM: " + (System.currentTimeMillis() - start) + "ms");
 			return result;
 		} catch (IOException e) {
 			e.printStackTrace();

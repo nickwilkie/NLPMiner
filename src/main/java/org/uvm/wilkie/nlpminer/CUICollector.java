@@ -2,11 +2,13 @@ package org.uvm.wilkie.nlpminer;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,12 +16,36 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlType;
 
+@XmlRootElement(namespace="org.uvm.wilkie.nlpminer")
+@XmlType(propOrder={"itemsets","emptyRecords"})
+@XmlAccessorType(XmlAccessType.FIELD)
 public class CUICollector {
 	private static final Pattern CUI_NUMBER_PATTERN = Pattern.compile("'C(\\d{7})'");
+	@XmlElementWrapper(name="itemsetList")
+	@XmlElement(name="itemset")
 	HashMap<String, CUIItemset> itemsets = new HashMap<String, CUIItemset>();
+	int emptyRecords = 0;
 	
 	public CUICollector() {
+	}
+	
+	public void emptyRecordFound() {
+		emptyRecords++;
+	}
+	
+	public int getEmptyRecords() {
+		return emptyRecords;
 	}
 	
 	public void put(List<String> cuiCollection, String pmid) {
@@ -36,23 +62,67 @@ public class CUICollector {
 	}
 	
 	public Collection<CUIItemset> getCuiItemsets() {
-		return itemsets.values();
+		List<CUIItemset> result = new ArrayList<CUIItemset>(itemsets.values());
+		Collections.sort(result, new Comparator<CUIItemset>(){
+			@Override
+			public int compare(CUIItemset arg0, CUIItemset arg1) {
+				// TODO Auto-generated method stub
+				return Integer.compare(arg0.getNumber(), arg1.getNumber()) * -1;
+			}
+		});
+		return result;
+	}
+	
+	public void saveXml(File outputFile) throws IOException {
+		BufferedWriter writer = null;
+		try {
+			// we create an object for writing the output file
+			outputFile.delete();
+			outputFile.createNewFile();
+			// we read the file line by line until the end of the file
+
+		    JAXBContext context = JAXBContext.newInstance(CUICollector.class);
+		    Marshaller m = context.createMarshaller();
+		    m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+		    // Write to System.out
+//		    m.marshal(this, System.out);
+
+		    // Write to File
+		    m.marshal(this, outputFile);
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			if (writer != null) {
+				writer.close();
+			}
+		}
+	}
+	
+	public static CUICollector loadFromXml(File xml) throws JAXBException, IOException {
+	    JAXBContext context = JAXBContext.newInstance(CUICollector.class);
+	    Unmarshaller um = context.createUnmarshaller();
+	    return (CUICollector) um.unmarshal(new FileReader(xml));
 	}
 	
 	public void saveSpmfTransactionFile(File outputFile) throws IOException {
 		BufferedWriter writer = null;
 		try {
 			// we create an object for writing the output file
-			writer = new BufferedWriter(new FileWriter(outputFile)); 
+			outputFile.delete();
+			outputFile.createNewFile();
+			writer = new BufferedWriter(new FileWriter(outputFile,false)); 
 			// we read the file line by line until the end of the file
 			List<CUIItemset> cuiItemsets = new ArrayList<CUIItemset>(itemsets.values());
 			for (int i = 0; i < cuiItemsets.size(); i++) {
+				CUIItemset itemset = cuiItemsets.get(i);
+				if (itemset.getCuiNumbers().size() == 0) {
+					continue;
+				}
+
 				if (i != 0) {
 					writer.newLine(); // create new line
 				}
-				
-				CUIItemset itemset = cuiItemsets.get(i);
-				
 				// we use a set to store the values to avoid duplicates
 				// because they are not allowed in a transaction
 				Set<Integer> values = new HashSet<Integer>();
@@ -69,7 +139,7 @@ public class CUICollector {
 					if (j != 0) {
 						writer.write(' ');
 					}
-					writer.write(listValues.get(j));
+					writer.write(listValues.get(j).toString());
 				}
 			}
 		} catch (Exception e) {
@@ -81,11 +151,22 @@ public class CUICollector {
 		}
 	}
 	
-	class CUIItemset {
+	@XmlRootElement(name="itemset")
+	@XmlAccessorType(XmlAccessType.FIELD)
+	static class CUIItemset {
+		@XmlElementWrapper(name="pmids")
+		@XmlElement(name="pmid")
 		private List<Integer> pmids = new ArrayList<Integer>();
+		
+		@XmlElementWrapper(name="cuiNumbers")
+		@XmlElement(name="cuiNumber")
 		private List<Integer> cuiNumbers = new ArrayList<Integer>();
+		
 		private int hashValue;
 		private String key;
+		
+		public CUIItemset() {
+		}
 		
 		public CUIItemset(List<String> cuis) {
 			Matcher matcher;
@@ -155,7 +236,7 @@ public class CUICollector {
 		
 		@Override
 		public String toString() {
-			return getNumber() + " matches for CUIDs: " + getCuiNumbers().toString();
+			return getNumber() + "x " + getCuiNumbers().toString();
 		}
 		
 		@Override
