@@ -187,9 +187,10 @@ public class CUICollector {
 			}
 			Collections.sort(cuiNumbers);
 			
-			StringBuilder keyBuilder = new StringBuilder(cuiNumbers.size() * 7);
+			StringBuilder keyBuilder = new StringBuilder(cuiNumbers.size() * 8);
 			for (int cui : cuiNumbers) {
 				keyBuilder.append(cui);
+				keyBuilder.append('-');
 			}
 			key = keyBuilder.toString();
 		}

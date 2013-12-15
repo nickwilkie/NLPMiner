@@ -18,6 +18,8 @@ import java.util.zip.GZIPInputStream;
 
 import org.uvm.wilkie.nlpminer.CUICollector.CUIItemset;
 
+import com.sun.corba.se.impl.ior.OldPOAObjectKeyTemplate;
+
 public class MMOFileScanner {
 	private CUICollector collector = null;
 	
@@ -25,7 +27,7 @@ public class MMOFileScanner {
 	Pattern relevantData = Pattern
 			.compile("(utterance|args|mappings)\\((.+)\\).\\n");
 	Pattern evPattern = Pattern
-			.compile("ev\\((.{1,5}),('.*?'),'?.*?'?,('?.*?'?),\\[.*?\\],(\\[[^\\]]*?\\]),\\[.*?\\],[yn].*\\d\\)");
+			.compile("ev\\((.{1,5}),('.*?'),'?.*?'?,('?.*?'?),\\[.*?\\],(\\[.*?\\]),\\[.*?\\],[yn].*?],\\d\\)");
 	
 	public MMOFileScanner() {
 		setCollector(new CUICollector());
@@ -33,7 +35,7 @@ public class MMOFileScanner {
 	
 	public void scan(File inputFile, File outputFile, PMIDList pmidList) {
 		long startTime = System.currentTimeMillis();
-		int count = 0;
+		int count = -1;
 		Scanner utteranceScanner = null;
 		OutputStreamWriter writer = null;
 		try {
@@ -66,7 +68,7 @@ public class MMOFileScanner {
 					pmid = PMIDMatcher.group(1);
 					if(!pmid.equals(previousPMID)) {
 						if (collectingCuis.size() > 0) {
-							getCollector().put(collectingCuis, pmid);
+							getCollector().put(collectingCuis, previousPMID);
 							for(String cui : collectingCuis) {
 								writer.write(cui);
 								writer.write(',');
@@ -139,7 +141,7 @@ public class MMOFileScanner {
 			System.out.println("File completed in "
 					+ (System.currentTimeMillis() - startTime) + "ms");
 			Collection<CUIItemset> cuiItemsets = getCollector().getCuiItemsets();
-			System.out.println("Itemset results (" + cuiItemsets.size() + "): " + cuiItemsets.toString());
+			System.out.println("Itemset results (" + cuiItemsets.size() + ")");
 			System.out.println();
 		}
 	}

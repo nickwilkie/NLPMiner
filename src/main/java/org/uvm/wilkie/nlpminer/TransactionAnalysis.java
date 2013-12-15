@@ -35,7 +35,7 @@ public class TransactionAnalysis {
 		AlgoCharm charm = new AlgoCharm();
 		
 		try {
-			Itemsets result = charm.runAlgorithmWithRelativeMinsup(null, transactionDb, false, 500, 3);
+			Itemsets result = charm.runAlgorithmWithRelativeMinsup(null, transactionDb, false, 25000, 100);
 
 			System.out.println("Time to run CHARM: " + (System.currentTimeMillis() - start) + "ms");
 			return result;
